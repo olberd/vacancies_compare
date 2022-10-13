@@ -40,7 +40,19 @@ def get_job_salary():
     response.raise_for_status()
     vacancies = json.loads(response.text)
     for job in vacancies['items']:
-        print(job['salary'])
+        predict_rub_salary(job['salary'])
+
+
+def predict_rub_salary(vacancy):
+    if vacancy and vacancy['currency'] == 'RUR':
+        if vacancy['from'] and vacancy['to']:
+            print((vacancy['from'] + vacancy['to']) / 2)
+        elif vacancy['from'] and not vacancy['to']:
+            print(vacancy['from'] * 1.2)
+        elif not vacancy['from'] and vacancy['to']:
+            print(vacancy['to'] * 0.8)
+    else:
+        print(None)
 
 
 if __name__ == '__main__':

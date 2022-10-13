@@ -30,5 +30,19 @@ def get_vacancies_by_lang():
     return vacancies_by_languages
 
 
+def get_job_salary():
+    payload = {
+        'text': 'Программист Python',
+        'area': 1,
+        'period': 30,
+    }
+    response = requests.get(hh_url, params=payload)
+    response.raise_for_status()
+    vacancies = json.loads(response.text)
+    for job in vacancies['items']:
+        print(job['salary'])
+
+
 if __name__ == '__main__':
-    pprint(get_vacancies_by_lang())
+    # pprint(get_vacancies_by_lang())
+    get_job_salary()

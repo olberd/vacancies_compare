@@ -4,24 +4,10 @@ from itertools import count
 from dotenv import load_dotenv
 from pprint import pprint
 import requests
+from terminaltables import AsciiTable
 
-
-LANGUAGES = ['Swift', 'Python', 'Java', 'JavaScript', 'C', 'C#', 'Go', 'Swift',
+LANGUAGES = ['Swift', 'Python', 'Java', 'JavaScript', 'C', 'C#', 'Go',
              'PHP', 'Ruby', 'C++', 'Objective-C', 'Scala', 'Fortran']
-# headers = {
-#     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0'
-# }
-
-
-# def get_average_salary(vacancies):
-#     salaries = []
-#     for vacancy in vacancies:
-#         # currency = vacancy['salary'].get('currency')
-#         salary_from = vacancy['salary'].get('from')
-#         salary_to = vacancy['salary'].get('to')
-#         salaries.append(predict_rub_salary(salary_from, salary_to))
-#     salary_sum = sum(salaries)
-#     return len(salaries), int(salary_sum)
 
 
 def predict_salary(salary_from, salary_to):
@@ -37,8 +23,9 @@ def predict_salary(salary_from, salary_to):
 
 def get_vacancies_by_lang_hh(languages):
     salaries = []
+    vacancies_by_languages = {}
     for lang in languages:
-        vacancies_by_languages = {lang: {}}
+        vacancies_by_languages[lang] = {}
 
         for page in count(0):
             hh_url = 'https://api.hh.ru/vacancies/'
@@ -65,7 +52,7 @@ def get_vacancies_by_lang_hh(languages):
         vacancies_by_languages[lang]['vacancies_found'] = page_payload['found']
         vacancies_by_languages[lang]['vacancies_processed'] = len(salaries)
         vacancies_by_languages[lang]['average_salary'] = int(avg_language_salary)
-        return vacancies_by_languages
+    return vacancies_by_languages
 
 
 def get_superjob_vacancies_by_language(language, superjob_token, page=0):
@@ -85,8 +72,7 @@ def get_superjob_vacancies_by_language(language, superjob_token, page=0):
         params=params,
     )
     response.raise_for_status()
-    print(response.json()['objects'])
-    # return response.json()
+    return response.json()
 
 
 def predict_rub_salary_for_sj(vacancy):
@@ -99,36 +85,36 @@ def predict_rub_salary_for_sj(vacancy):
         return None
 
 
-def parse_language_vacancies_superjob(superjob_token):
-    more = True
-    page = 0
-    while more:
-        vacancies_url = 'https://api.superjob.ru/2.20/vacancies/'
-        headers = {
-            'X-Api-App-Id': superjob_token,
-        }
-        params = {
-            'town': 4,
-            'catalogues': 48,
-            #'keyword': language,
-            'page': page
-        }
-        response = requests.get(
-            url=vacancies_url,
-            headers=headers,
-            params=params,
-        )
-        response.raise_for_status()
-        response = response.json()
-        more = response['more']
-        page += 1
-        for vacancy in response['objects']:
-            print(vacancy.get('profession'), vacancy.get('town').get('title'), predict_rub_salary_for_sj(vacancy))
+def parse_language_vacancies_superjob(languages, superjob_token):
+    vacancies_by_languages = {}
+    for language in languages:
+        salaries = []
+        more = True
+        page = 0
+        while more:
+            response = get_superjob_vacancies_by_language(language, superjob_token, page)
+
+            more = response['more']
+            for vacancy in response['objects']:
+                vacancy_salary = predict_rub_salary_for_sj(vacancy)
+                if vacancy_salary:
+                    salaries.append(vacancy_salary)
+            page += 1
+
+        salaries_amount = sum(salaries)
+        processed_vacancies = len(salaries)
+        avg_language_salary = 0
+        if processed_vacancies:
+            avg_language_salary = (salaries_amount / processed_vacancies)
+        vacancies_by_languages[language] = {}
+        vacancies_by_languages[language]['vacancies_found'] = response['total']
+        vacancies_by_languages[language]['vacancies_processed'] = processed_vacancies
+        vacancies_by_languages[language]['average_salary'] = int(avg_language_salary)
+    return vacancies_by_languages
 
 
 if __name__ == '__main__':
     # print(get_vacancies_by_lang_hh(LANGUAGES[0:3]))
     load_dotenv()
     superjob_token = os.environ.get('SUPERJOB_TOKEN')
-    parse_language_vacancies_superjob(superjob_token)
 

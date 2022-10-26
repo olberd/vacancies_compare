@@ -7,7 +7,7 @@ import requests
 from terminaltables import AsciiTable
 
 LANGUAGES = ['Swift', 'Python', 'Java', 'JavaScript', 'C', 'C#', 'Go',
-             'PHP', 'Ruby', 'C++', 'Objective-C', 'Scala', 'Fortran']
+             'PHP', 'Ruby', 'C++', 'Objective-C', 'Scala', '1С']
 
 
 def predict_salary(salary_from, salary_to):
@@ -113,8 +113,31 @@ def parse_language_vacancies_superjob(languages, superjob_token):
     return vacancies_by_languages
 
 
+def hh_table():
+    hh_title = 'Средние зарплаты на Head Hunter'
+    sj_title = 'Средние зарплаты на SuperJob'
+    vacancies_by_lang_hh = get_vacancies_by_lang_hh(LANGUAGES)
+    rows = [['Язык программирования', 'Вакансий найдено', 'Вакансий обработано', 'Средняя зарплата']]
+
+    for lang, statistic in vacancies_by_lang_hh.items():
+        rows.append([lang, statistic['vacancies_found'], statistic['vacancies_processed'], statistic['average_salary']])
+
+    table_instance = AsciiTable(rows, hh_title)
+    print(table_instance.table)
+
+
+def sj_table(superjob_token):
+    rows = [['Язык программирования', 'Вакансий найдено', 'Вакансий обработано', 'Средняя зарплата']]
+    sj_title = 'Средние зарплаты на SuperJob'
+    vacancies_by_lang_sj = parse_language_vacancies_superjob(LANGUAGES, superjob_token)
+    for lang, statistic in vacancies_by_lang_sj.items():
+        rows.append([lang, statistic['vacancies_found'], statistic['vacancies_processed'], statistic['average_salary']])
+    table_instance = AsciiTable(rows, sj_title)
+    print(table_instance.table)
+
+
 if __name__ == '__main__':
-    # print(get_vacancies_by_lang_hh(LANGUAGES[0:3]))
+    hh_table()
     load_dotenv()
     superjob_token = os.environ.get('SUPERJOB_TOKEN')
-
+    sj_table(superjob_token)

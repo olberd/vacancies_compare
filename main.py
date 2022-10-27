@@ -1,4 +1,3 @@
-import json
 import os
 from itertools import count
 from dotenv import load_dotenv
@@ -23,6 +22,8 @@ def predict_salary(salary_from, salary_to):
 def get_vacancies_by_lang_hh(languages):
     salaries = []
     vacancies_by_languages = {}
+    moscow_id = 1
+    month = 30
     for lang in languages:
         vacancies_by_languages[lang] = {}
 
@@ -30,8 +31,8 @@ def get_vacancies_by_lang_hh(languages):
             hh_url = 'https://api.hh.ru/vacancies/'
             payload = {
                 'text': f'Программист {lang}',
-                'area': 1,
-                'period': 30,
+                'area': moscow_id,
+                'period': month,
                 'page': page,
             }
             response = requests.get(hh_url, params=payload)
@@ -59,12 +60,14 @@ def get_vacancies_by_lang_hh(languages):
 
 def get_superjob_vacancies_by_language(language, superjob_token, page=0):
     vacancies_url = 'https://api.superjob.ru/2.20/vacancies/'
+    moscow_id = 4
+    job_catalogues = 48
     headers = {
         'X-Api-App-Id': superjob_token,
     }
     params = {
-        'town': 4,
-        'catalogues': 48,
+        'town': moscow_id,
+        'catalogues': job_catalogues,
         'keyword': language,
         'page': page
     }

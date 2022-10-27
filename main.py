@@ -120,10 +120,10 @@ def parse_language_vacancies_superjob(languages, superjob_token):
 
 def get_hh_table():
     hh_title = 'Средние зарплаты на Head Hunter'
-    vacancies_by_lang_hh = get_vacancies_by_lang_hh(LANGUAGES)
+    statistic_by_lang_hh = get_vacancies_by_lang_hh(LANGUAGES)
     rows = [['Язык программирования', 'Вакансий найдено', 'Вакансий обработано', 'Средняя зарплата']]
 
-    for lang, statistic in vacancies_by_lang_hh.items():
+    for lang, statistic in statistic_by_lang_hh.items():
         rows.append([lang, statistic['vacancies_found'], statistic['vacancies_processed'], statistic['average_salary']])
 
     table_instance = AsciiTable(rows, hh_title)
@@ -133,8 +133,8 @@ def get_hh_table():
 def get_sj_table(superjob_token):
     rows = [['Язык программирования', 'Вакансий найдено', 'Вакансий обработано', 'Средняя зарплата']]
     sj_title = 'Средние зарплаты на SuperJob'
-    vacancies_by_lang_sj = parse_language_vacancies_superjob(LANGUAGES, superjob_token)
-    for lang, statistic in vacancies_by_lang_sj.items():
+    statistic_by_lang_sj = parse_language_vacancies_superjob(LANGUAGES, superjob_token)
+    for lang, statistic in statistic_by_lang_sj.items():
         rows.append([lang, statistic['vacancies_found'], statistic['vacancies_processed'], statistic['average_salary']])
     table_instance = AsciiTable(rows, sj_title)
     print(table_instance.table)

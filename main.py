@@ -118,9 +118,8 @@ def parse_language_vacancies_superjob(languages, superjob_token):
     return vacancies_by_languages
 
 
-def hh_table():
+def get_hh_table():
     hh_title = 'Средние зарплаты на Head Hunter'
-    sj_title = 'Средние зарплаты на SuperJob'
     vacancies_by_lang_hh = get_vacancies_by_lang_hh(LANGUAGES)
     rows = [['Язык программирования', 'Вакансий найдено', 'Вакансий обработано', 'Средняя зарплата']]
 
@@ -131,7 +130,7 @@ def hh_table():
     print(table_instance.table)
 
 
-def sj_table(superjob_token):
+def get_sj_table(superjob_token):
     rows = [['Язык программирования', 'Вакансий найдено', 'Вакансий обработано', 'Средняя зарплата']]
     sj_title = 'Средние зарплаты на SuperJob'
     vacancies_by_lang_sj = parse_language_vacancies_superjob(LANGUAGES, superjob_token)
@@ -142,7 +141,7 @@ def sj_table(superjob_token):
 
 
 if __name__ == '__main__':
-    hh_table()
+    get_hh_table()
     load_dotenv()
     superjob_token = os.environ.get('SUPERJOB_TOKEN')
-    sj_table(superjob_token)
+    get_sj_table(superjob_token)

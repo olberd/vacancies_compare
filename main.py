@@ -49,9 +49,12 @@ def get_vacancies_by_lang_hh(languages):
                 salaries.append(predict_salary(salary_from, salary_to))
 
         avg_language_salary = (sum(salaries) / len(salaries))
-        vacancies_by_languages[lang]['vacancies_found'] = page_payload['found']
-        vacancies_by_languages[lang]['vacancies_processed'] = len(salaries)
-        vacancies_by_languages[lang]['average_salary'] = int(avg_language_salary)
+        vacancies_by_languages[lang] = {}
+        vacancies_by_languages[lang] = {
+            'vacancies_found': page_payload['found'],
+            'vacancies_processed': len(salaries),
+            'average_salary': int(avg_language_salary),
+        }
     return vacancies_by_languages
 
 
@@ -107,9 +110,11 @@ def parse_language_vacancies_superjob(languages, superjob_token):
         if processed_vacancies:
             avg_language_salary = (salaries_amount / processed_vacancies)
         vacancies_by_languages[language] = {}
-        vacancies_by_languages[language]['vacancies_found'] = response['total']
-        vacancies_by_languages[language]['vacancies_processed'] = processed_vacancies
-        vacancies_by_languages[language]['average_salary'] = int(avg_language_salary)
+        vacancies_by_languages[language] = {
+            'vacancies_found': response['total'],
+            'vacancies_processed': processed_vacancies,
+            'average_salary': int(avg_language_salary),
+        }
     return vacancies_by_languages
 
 

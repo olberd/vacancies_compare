@@ -2,7 +2,6 @@ import json
 import os
 from itertools import count
 from dotenv import load_dotenv
-from pprint import pprint
 import requests
 from terminaltables import AsciiTable
 
@@ -127,7 +126,7 @@ def get_hh_table():
         rows.append([lang, statistic['vacancies_found'], statistic['vacancies_processed'], statistic['average_salary']])
 
     table_instance = AsciiTable(rows, hh_title)
-    print(table_instance.table)
+    return table_instance.table
 
 
 def get_sj_table(superjob_token):
@@ -137,11 +136,11 @@ def get_sj_table(superjob_token):
     for lang, statistic in statistic_by_lang_sj.items():
         rows.append([lang, statistic['vacancies_found'], statistic['vacancies_processed'], statistic['average_salary']])
     table_instance = AsciiTable(rows, sj_title)
-    print(table_instance.table)
+    return table_instance.table
 
 
 if __name__ == '__main__':
-    get_hh_table()
+    print(get_hh_table())
     load_dotenv()
     superjob_token = os.environ.get('SUPERJOB_TOKEN')
-    get_sj_table(superjob_token)
+    print(get_sj_table(superjob_token))

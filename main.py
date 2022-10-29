@@ -19,28 +19,33 @@ def predict_salary(salary_from, salary_to):
         return None
 
 
-def get_vacancies_by_lang_hh(languages):
-    salaries = []
-    vacancies_by_languages = {}
+def get_vacancies_by_language_hh(lang, page):
     moscow_id = 1
     month = 30
+    hh_url = 'https://api.hh.ru/vacancies/'
+    payload = {
+        'text': f'Программист {lang}',
+        'area': moscow_id,
+        'period': month,
+        'page': page,
+    }
+    headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                             'Chrome/106.0.0.0 Safari/537.36'}
+    response = requests.get(hh_url, headers=headers, params=payload)
+    response.raise_for_status()
+    return response.json()
+
+
+def parse_language_vacancies__hh(languages):
+    page_payload = []
+    salaries = []
+    vacancies_by_languages = {}
     for lang in languages:
         vacancies_by_languages[lang] = {}
-
         for page in count(0):
-            hh_url = 'https://api.hh.ru/vacancies/'
-            payload = {
-                'text': f'Программист {lang}',
-                'area': moscow_id,
-                'period': month,
-                'page': page,
-            }
-            response = requests.get(hh_url, params=payload)
-            response.raise_for_status()
-            page_payload = response.json()
+            page_payload = get_vacancies_by_language_hh(lang, page)
             if page == page_payload['pages'] - 1:
                 break
-
             for vacancy in page_payload['items']:
                 if not vacancy['salary'] or vacancy['salary']['currency'] != 'RUR':
                     continue
@@ -58,7 +63,7 @@ def get_vacancies_by_lang_hh(languages):
     return vacancies_by_languages
 
 
-def get_superjob_vacancies_by_language(language, superjob_token, page=0):
+def get_vacancies_by_language_superjob(language, superjob_token, page=0):
     vacancies_url = 'https://api.superjob.ru/2.20/vacancies/'
     moscow_id = 4
     job_catalogues = 48
@@ -82,12 +87,11 @@ def get_superjob_vacancies_by_language(language, superjob_token, page=0):
 
 def predict_rub_salary_for_sj(vacancy):
     salary_currency = vacancy.get('currency', None)
-    if salary_currency and salary_currency == 'rub':
-        payment_from = vacancy.get('payment_from', None)
-        payment_to = vacancy.get('payment_to', None)
-        return predict_salary(payment_from, payment_to)
-    else:
-        return None
+    if not salary_currency and salary_currency != 'rub':
+        return
+    payment_from = vacancy.get('payment_from', None)
+    payment_to = vacancy.get('payment_to', None)
+    return predict_salary(payment_from, payment_to)
 
 
 def parse_language_vacancies_superjob(languages, superjob_token):
@@ -97,7 +101,7 @@ def parse_language_vacancies_superjob(languages, superjob_token):
         more = True
         page = 0
         while more:
-            response = get_superjob_vacancies_by_language(language, superjob_token, page)
+            response = get_vacancies_by_language_superjob(language, superjob_token, page)
 
             more = response['more']
             for vacancy in response['objects']:
@@ -120,30 +124,31 @@ def parse_language_vacancies_superjob(languages, superjob_token):
     return vacancies_by_languages
 
 
-def get_hh_table():
-    hh_title = 'Средние зарплаты на Head Hunter'
-    statistic_by_lang_hh = get_vacancies_by_lang_hh(LANGUAGES)
+def get_table_rows(lang_statistic):
     rows = [['Язык программирования', 'Вакансий найдено', 'Вакансий обработано', 'Средняя зарплата']]
-
-    for lang, statistic in statistic_by_lang_hh.items():
+    for lang, statistic in lang_statistic.items():
         rows.append([lang, statistic['vacancies_found'], statistic['vacancies_processed'], statistic['average_salary']])
+    return rows
 
+
+def create_table_hh():
+    hh_title = 'Средние зарплаты на Head Hunter'
+    statistic_by_lang_hh = parse_language_vacancies__hh(LANGUAGES)
+    rows = get_table_rows(statistic_by_lang_hh)
     table_instance = AsciiTable(rows, hh_title)
     return table_instance.table
 
 
-def get_sj_table(superjob_token):
-    rows = [['Язык программирования', 'Вакансий найдено', 'Вакансий обработано', 'Средняя зарплата']]
+def create_table_sj(superjob_token):
     sj_title = 'Средние зарплаты на SuperJob'
     statistic_by_lang_sj = parse_language_vacancies_superjob(LANGUAGES, superjob_token)
-    for lang, statistic in statistic_by_lang_sj.items():
-        rows.append([lang, statistic['vacancies_found'], statistic['vacancies_processed'], statistic['average_salary']])
+    rows = get_table_rows(statistic_by_lang_sj)
     table_instance = AsciiTable(rows, sj_title)
     return table_instance.table
 
 
 if __name__ == '__main__':
-    print(get_hh_table())
     load_dotenv()
     superjob_token = os.environ.get('SUPERJOB_TOKEN')
-    print(get_sj_table(superjob_token))
+    print(create_table_hh())
+    print(create_table_sj(superjob_token))

@@ -36,7 +36,8 @@ def get_vacancies_by_language_hh(lang, page):
     return response.json()
 
 
-def parse_language_vacancies__hh(languages):
+def parse_language_vacancies_hh():
+    languages = LANGUAGES
     page_payload = []
     salaries = []
     vacancies_by_languages = {}
@@ -52,12 +53,13 @@ def parse_language_vacancies__hh(languages):
                 salary_from = vacancy['salary'].get('from')
                 salary_to = vacancy['salary'].get('to')
                 salaries.append(predict_salary(salary_from, salary_to))
-
-        avg_language_salary = (sum(salaries) / len(salaries))
-        vacancies_by_languages[lang] = {}
+        vacancies_processed = len(salaries)
+        if vacancies_processed:
+            avg_language_salary = (sum(salaries) / vacancies_processed)
+        # vacancies_by_languages[lang] = {}
         vacancies_by_languages[lang] = {
             'vacancies_found': page_payload['found'],
-            'vacancies_processed': len(salaries),
+            'vacancies_processed': vacancies_processed,
             'average_salary': int(avg_language_salary),
         }
     return vacancies_by_languages
@@ -94,7 +96,8 @@ def predict_rub_salary_for_sj(vacancy):
     return predict_salary(payment_from, payment_to)
 
 
-def parse_language_vacancies_superjob(languages, superjob_token):
+def parse_language_vacancies_superjob(superjob_token):
+    languages = LANGUAGES
     vacancies_by_languages = {}
     for language in languages:
         salaries = []
@@ -115,7 +118,7 @@ def parse_language_vacancies_superjob(languages, superjob_token):
         avg_language_salary = 0
         if processed_vacancies:
             avg_language_salary = (salaries_amount / processed_vacancies)
-        vacancies_by_languages[language] = {}
+        # vacancies_by_languages[language] = {}
         vacancies_by_languages[language] = {
             'vacancies_found': response['total'],
             'vacancies_processed': processed_vacancies,
@@ -131,24 +134,14 @@ def get_table_rows(lang_statistic):
     return rows
 
 
-def create_table_hh():
-    hh_title = 'Средние зарплаты на Head Hunter'
-    statistic_by_lang_hh = parse_language_vacancies__hh(LANGUAGES)
-    rows = get_table_rows(statistic_by_lang_hh)
-    table_instance = AsciiTable(rows, hh_title)
-    return table_instance.table
-
-
-def create_table_sj(superjob_token):
-    sj_title = 'Средние зарплаты на SuperJob'
-    statistic_by_lang_sj = parse_language_vacancies_superjob(LANGUAGES, superjob_token)
-    rows = get_table_rows(statistic_by_lang_sj)
-    table_instance = AsciiTable(rows, sj_title)
+def create_table(vacancies, title):
+    rows = get_table_rows(vacancies)
+    table_instance = AsciiTable(rows, title)
     return table_instance.table
 
 
 if __name__ == '__main__':
     load_dotenv()
     superjob_token = os.environ.get('SUPERJOB_TOKEN')
-    print(create_table_hh())
-    print(create_table_sj(superjob_token))
+    print(create_table(parse_language_vacancies_hh(), 'Средние зарплаты на Head Hunter'))
+    print(create_table(parse_language_vacancies_superjob(superjob_token), 'Средние зарплаты на SuperJob'))
